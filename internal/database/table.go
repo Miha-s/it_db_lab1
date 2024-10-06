@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strconv"
 
 	"github.com/Miha-s/it_db_lab1/internal/database/attributes"
 )
@@ -21,13 +22,17 @@ type Table struct {
 	name         string
 	attributes   []attributes.Attribute
 	rows         [][]string
+	last_id      uint
 }
 
-func NewTable(storage_path string, name string, attributes []attributes.Attribute) *Table {
+func NewTable(storage_path string, name string, attrs []attributes.Attribute) *Table {
+	id_attr, _ := attributes.CreateAttribute("integer", "id")
+	attrs = append(attrs, id_attr)
 	table := &Table{
 		storage_path: storage_path,
 		name:         name,
-		attributes:   attributes,
+		attributes:   attrs,
+		last_id:      1,
 	}
 
 	table.saveTable()
@@ -35,11 +40,7 @@ func NewTable(storage_path string, name string, attributes []attributes.Attribut
 }
 
 func LoadFromFile(storage_path string, name string) *Table {
-	t := &Table{
-		storage_path: storage_path,
-		name:         name,
-	}
-	filePath := t.storage_path + "/" + t.name + ".csv"
+	filePath := storage_path + "/" + name + ".csv"
 	file, err := os.Open(filePath)
 	if err != nil {
 		panic(err)
@@ -60,14 +61,15 @@ func LoadFromFile(storage_path string, name string) *Table {
 	dataTypes := records[0]
 	columnNames := records[1]
 
-	t.attributes = make([]attributes.Attribute, len(columnNames))
+	attrs := make([]attributes.Attribute, len(columnNames))
 	for i, name := range columnNames {
-		t.attributes[i], err = attributes.CreateAttribute(dataTypes[i], name)
+		attrs[i], err = attributes.CreateAttribute(dataTypes[i], name)
 		if err != nil {
 			return nil
 		}
 	}
 
+	t := NewTable(storage_path, name, attrs)
 	t.rows = records[2:]
 
 	return t
@@ -86,6 +88,7 @@ func (t *Table) GetAllData() [][]string {
 }
 
 func (t *Table) AddRow(row []string) error {
+	row = append(row, strconv.Itoa(int(t.last_id)))
 	if len(row) != len(t.attributes) {
 		return errors.New("invalid number of arguments")
 	}
@@ -95,6 +98,7 @@ func (t *Table) AddRow(row []string) error {
 	}
 
 	t.rows = append(t.rows, row)
+	t.last_id++
 
 	return nil
 }
