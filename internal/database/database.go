@@ -81,6 +81,10 @@ func LoadDatabases(storage_path string) ([]*Database, error) {
 	return databases, nil
 }
 
+func (db *Database) Name() string {
+	return db.name
+}
+
 func (db *Database) CreateTable(name string, attributes []attributes.Attribute) error {
 	if db.GetTable(name) != nil {
 		return fmt.Errorf("%v table already exists", name)
@@ -110,4 +114,11 @@ func (db *Database) GetTable(name string) *Table {
 	}
 
 	return nil
+}
+
+func (db *Database) Delete() {
+	err := os.RemoveAll(db.storage_path)
+	if err != nil {
+		log.Printf("failed to clear storage for db %v, err - %v", db.name, err)
+	}
 }

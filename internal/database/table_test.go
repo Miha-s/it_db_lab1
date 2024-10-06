@@ -63,7 +63,7 @@ func TestTable_SaveTable_Serialization(t *testing.T) {
 
 	table.Sync()
 
-	loadedTable := NewTable("./", "test_serialization_table", attributes)
+	loadedTable := LoadFromFile("./", "test_serialization_table")
 
 	if len(loadedTable.rows) != len(rows) {
 		t.Fatalf("expected %d rows, got %d", len(rows), len(loadedTable.rows))
