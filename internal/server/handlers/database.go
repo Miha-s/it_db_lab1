@@ -72,7 +72,6 @@ func (f *HandlersFactory) GetDb() http.HandlerFunc {
 
 		tables := db.GetAllTablesNames()
 
-
 		result := map[string]interface{}{
 			"tables": tables,
 		}

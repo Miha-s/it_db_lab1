@@ -35,11 +35,13 @@ func NewServer(port uint, handlers handlers.HandlersFactory) *Server {
 		r.Delete("/", handlers.DeleteDb())
 
 		r.Route("/{table_name}", func(r chi.Router) {
-			r.Get("/", handlers.GetTable())
+			r.Get("/", handlers.GetTableAttributes())
 			r.Post("/", handlers.CreateTable())
 			r.Delete("/", handlers.DeleteTable())
-			r.Patch("/", handlers.UpdateTable())
-			r.Patch("/remove_duplicates", handlers.RemoveDuplicates())
+			r.Patch("/rows", handlers.UpdateTable())
+			r.Get("/rows", handlers.GetTableData())
+			r.Post("/rows", handlers.AddRow())
+			r.Patch("/rows/remove_duplicates", handlers.RemoveDuplicates())
 		})
 	})
 

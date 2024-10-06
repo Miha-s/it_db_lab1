@@ -9,6 +9,11 @@ import (
 	"github.com/Miha-s/it_db_lab1/internal/database/attributes"
 )
 
+type AttributeValue struct {
+	Name  string
+	Value string
+}
+
 type AcceptRow func([]string) bool
 
 type Table struct {
@@ -57,7 +62,10 @@ func LoadFromFile(storage_path string, name string) *Table {
 
 	t.attributes = make([]attributes.Attribute, len(columnNames))
 	for i, name := range columnNames {
-		t.attributes[i] = attributes.CreateAttribute(dataTypes[i], name)
+		t.attributes[i], err = attributes.CreateAttribute(dataTypes[i], name)
+		if err != nil {
+			return nil
+		}
 	}
 
 	t.rows = records[2:]
@@ -73,6 +81,10 @@ func (t *Table) Attributes() []attributes.Attribute {
 	return t.attributes
 }
 
+func (t *Table) GetAllData() [][]string {
+	return t.rows
+}
+
 func (t *Table) AddRow(row []string) error {
 	if len(row) != len(t.attributes) {
 		return errors.New("invalid number of arguments")
@@ -85,6 +97,37 @@ func (t *Table) AddRow(row []string) error {
 	t.rows = append(t.rows, row)
 
 	return nil
+}
+
+func (t *Table) UpdateRowWithAttributes(row []string, attrs []AttributeValue) error {
+	var attrs_indexes []int
+	for _, attr := range attrs {
+		found := false
+		for index, attr_type := range t.attributes {
+			if attr_type.Name() == attr.Name {
+				err := attr_type.Validate(attr.Value)
+				if err != nil {
+					return fmt.Errorf("incorrect value for attribute %v", attr)
+				}
+				attrs_indexes = append(attrs_indexes, index)
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			return fmt.Errorf("failed to find attribute %v", attr.Name)
+		}
+	}
+
+	return t.UpdateRow(row, func(row []string) bool {
+		for index, value := range attrs {
+			if row[attrs_indexes[index]] != value.Value {
+				return false
+			}
+		}
+		return true
+	})
 }
 
 func (t *Table) UpdateRow(row []string, row_to_update AcceptRow) error {

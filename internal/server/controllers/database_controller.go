@@ -14,6 +14,7 @@ type DatabaseController struct {
 func NewDatabaseController(storage_path string) (*DatabaseController, error) {
 	db_controller := &DatabaseController{
 		storage_path: storage_path,
+		databases:    make(map[string]*database.Database),
 	}
 
 	databases, err := database.LoadDatabases(storage_path)

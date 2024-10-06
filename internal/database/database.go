@@ -18,6 +18,7 @@ func NewDatabase(storage_path string, name string) (*Database, error) {
 	db := &Database{
 		name:         name,
 		storage_path: storage_path + "/" + name,
+		tables:       make(map[string]*Table),
 	}
 
 	err := os.MkdirAll(db.storage_path, 0755)
@@ -86,7 +87,7 @@ func (db *Database) Name() string {
 }
 
 func (db *Database) CreateTable(name string, attributes []attributes.Attribute) error {
-	if _, exists := db.tables[name]; !exists {
+	if _, exists := db.tables[name]; exists {
 		return fmt.Errorf("%v table already exists", name)
 	}
 
@@ -95,11 +96,12 @@ func (db *Database) CreateTable(name string, attributes []attributes.Attribute) 
 }
 
 func (db *Database) RemoveTable(name string) error {
-	_, exists := db.tables[name]
+	table, exists := db.tables[name]
 	if !exists {
 		return fmt.Errorf("%v table not found", name)
 	}
 
+	table.Delete()
 	delete(db.tables, name)
 
 	return nil
