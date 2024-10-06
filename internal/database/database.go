@@ -11,7 +11,7 @@ import (
 type Database struct {
 	name         string
 	storage_path string
-	tables       []*Table
+	tables       map[string]*Table
 }
 
 func NewDatabase(storage_path string, name string) (*Database, error) {
@@ -52,7 +52,7 @@ func LoadFromStorage(storage_path string, name string) (*Database, error) {
 				return nil, fmt.Errorf("failed to load table from file: %v", fileName)
 			}
 
-			db.tables = append(db.tables, table)
+			db.tables[table.name] = table
 		}
 	}
 
@@ -86,34 +86,42 @@ func (db *Database) Name() string {
 }
 
 func (db *Database) CreateTable(name string, attributes []attributes.Attribute) error {
-	if db.GetTable(name) != nil {
+	if _, exists := db.tables[name]; !exists {
 		return fmt.Errorf("%v table already exists", name)
 	}
 
-	db.tables = append(db.tables, NewTable(db.storage_path, name, attributes))
+	db.tables[name] = NewTable(db.storage_path, name, attributes)
 	return nil
 }
 
 func (db *Database) RemoveTable(name string) error {
-	for index, table := range db.tables {
-		if table.Name() == name {
-			table.Delete()
-			db.tables = append(db.tables[:index], db.tables[index+1:]...)
-			return nil
-		}
+	_, exists := db.tables[name]
+	if !exists {
+		return fmt.Errorf("%v table not found", name)
 	}
 
-	return fmt.Errorf("%v table not found", name)
-}
-
-func (db *Database) GetTable(name string) *Table {
-	for _, table := range db.tables {
-		if table.Name() == name {
-			return table
-		}
-	}
+	delete(db.tables, name)
 
 	return nil
+}
+
+func (db *Database) GetTable(name string) (*Table, error) {
+	table, exists := db.tables[name]
+	if !exists {
+		return nil, fmt.Errorf("%v table not found", name)
+	}
+
+	return table, nil
+}
+
+func (db *Database) GetAllTablesNames() []string {
+	keys := make([]string, 0, len(db.tables))
+
+	for key := range db.tables {
+		keys = append(keys, key)
+	}
+
+	return keys
 }
 
 func (db *Database) Delete() {

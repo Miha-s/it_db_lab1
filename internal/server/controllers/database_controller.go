@@ -63,3 +63,13 @@ func (dbc *DatabaseController) GetDatabase(name string) (*database.Database, err
 
 	return db, nil
 }
+
+func (dbc *DatabaseController) GetAllDatabasesNames() []string {
+	keys := make([]string, 0, len(dbc.databases))
+
+	for key := range dbc.databases {
+		keys = append(keys, key)
+	}
+
+	return keys
+}

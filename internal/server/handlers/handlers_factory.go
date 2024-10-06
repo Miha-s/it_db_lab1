@@ -1,13 +1,13 @@
 package handlers
 
-import "github.com/Miha-s/it_db_lab1/internal/database"
+import "github.com/Miha-s/it_db_lab1/internal/server/controllers"
 
 type HandlersFactory struct {
-	database *database.Database
+	dbc *controllers.DatabaseController
 }
 
-func NewHandlersFactory(db *database.Database) *HandlersFactory {
+func NewHandlersFactory(dbc *controllers.DatabaseController) *HandlersFactory {
 	return &HandlersFactory{
-		database: db,
+		dbc: dbc,
 	}
 }

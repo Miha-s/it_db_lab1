@@ -92,8 +92,8 @@ func TestDatabase_GetTable(t *testing.T) {
 		t.Fatalf("expected no error creating table, got %v", err)
 	}
 
-	table := db.GetTable("test_table")
-	if table == nil {
+	_, err = db.GetTable("test_table")
+	if err != nil {
 		t.Fatal("expected to retrieve existing table, got nil")
 	}
 
