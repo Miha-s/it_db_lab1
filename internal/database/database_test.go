@@ -8,7 +8,7 @@ import (
 )
 
 func TestDatabase_CreateTable(t *testing.T) {
-	db, err := NewDatabase("test_db", ".")
+	db, err := NewDatabase(".", "test_db")
 	if err != nil {
 		t.Fatalf("expected no error creating database, got %v", err)
 	}
@@ -32,7 +32,7 @@ func TestDatabase_CreateTable(t *testing.T) {
 }
 
 func TestDatabase_RemoveTable_StorageRemoval(t *testing.T) {
-	db, err := NewDatabase("test_db", ".")
+	db, err := NewDatabase(".", "test_db")
 	if err != nil {
 		t.Fatalf("expected no error creating database, got %v", err)
 	}
@@ -65,7 +65,7 @@ func TestDatabase_RemoveTable_StorageRemoval(t *testing.T) {
 }
 
 func TestDatabase_RemoveTable_NotFound(t *testing.T) {
-	db, err := NewDatabase("test_db", ".")
+	db, err := NewDatabase(".", "test_db")
 	if err != nil {
 		t.Fatalf("expected no error creating database, got %v", err)
 	}
@@ -77,7 +77,7 @@ func TestDatabase_RemoveTable_NotFound(t *testing.T) {
 }
 
 func TestDatabase_GetTable(t *testing.T) {
-	db, err := NewDatabase("test_db", ".")
+	db, err := NewDatabase(".", "test_db")
 	if err != nil {
 		t.Fatalf("expected no error creating database, got %v", err)
 	}

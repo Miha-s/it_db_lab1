@@ -2,6 +2,7 @@ package database
 
 import (
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/Miha-s/it_db_lab1/internal/database/attributes"
@@ -13,13 +14,13 @@ type Database struct {
 	tables       []*Table
 }
 
-func NewDatabase(name string, storage_path string) (*Database, error) {
+func NewDatabase(storage_path string, name string) (*Database, error) {
 	db := &Database{
 		name:         name,
-		storage_path: storage_path,
+		storage_path: storage_path + "/" + name,
 	}
 
-	err := os.MkdirAll(db.storagePath(), 0755)
+	err := os.MkdirAll(db.storage_path, 0755)
 	if err != nil {
 		return nil, err
 	}
@@ -28,25 +29,25 @@ func NewDatabase(name string, storage_path string) (*Database, error) {
 }
 
 func LoadFromStorage(storage_path string, name string) (*Database, error) {
-	db, err := NewDatabase(name, storage_path)
+	db, err := NewDatabase(storage_path, name)
 	if err != nil {
 		return nil, err
 	}
 
-	files, err := os.ReadDir(storage_path)
+	files, err := os.ReadDir(db.storage_path)
 	if err != nil {
 		return nil, fmt.Errorf("could not read storage directory: %v", err)
 	}
 
 	for _, file := range files {
-		if !file.IsDir() && file.Type() == 0 { 
+		if !file.IsDir() && file.Type() == 0 {
 			fileName := file.Name()
 			if len(fileName) < 5 || fileName[len(fileName)-4:] != ".csv" {
-				continue 
+				continue
 			}
 
-			tableName := fileName[:len(fileName)-4] 
-			table := LoadFromFile(storage_path, tableName) 
+			tableName := fileName[:len(fileName)-4]
+			table := LoadFromFile(db.storage_path, tableName)
 			if table == nil {
 				return nil, fmt.Errorf("failed to load table from file: %v", fileName)
 			}
@@ -58,12 +59,34 @@ func LoadFromStorage(storage_path string, name string) (*Database, error) {
 	return db, nil
 }
 
+func LoadDatabases(storage_path string) ([]*Database, error) {
+	files, err := os.ReadDir(storage_path)
+	var databases []*Database
+
+	if err != nil {
+		return nil, fmt.Errorf("could not read storage directory: %v", err)
+	}
+
+	for _, file := range files {
+		if file.IsDir() {
+			new_db, err := LoadFromStorage(storage_path, file.Name())
+			if err != nil {
+				log.Printf("failed to load database - %v", file.Name())
+			} else {
+				databases = append(databases, new_db)
+			}
+		}
+	}
+
+	return databases, nil
+}
+
 func (db *Database) CreateTable(name string, attributes []attributes.Attribute) error {
 	if db.GetTable(name) != nil {
 		return fmt.Errorf("%v table already exists", name)
 	}
 
-	db.tables = append(db.tables, NewTable(db.storagePath(), name, attributes))
+	db.tables = append(db.tables, NewTable(db.storage_path, name, attributes))
 	return nil
 }
 
@@ -87,8 +110,4 @@ func (db *Database) GetTable(name string) *Table {
 	}
 
 	return nil
-}
-
-func (db *Database) storagePath() string {
-	return db.storage_path + "/" + db.name
 }
