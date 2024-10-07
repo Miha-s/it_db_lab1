@@ -8,6 +8,7 @@ import (
 	"github.com/Miha-s/it_db_lab1/internal/server/handlers"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/cors"
 )
 
 type Server struct {
@@ -21,6 +22,14 @@ func NewServer(port uint, handlers handlers.HandlersFactory) *Server {
 	}
 
 	serv.router = chi.NewRouter()
+	serv.router.Use(cors.Handler(cors.Options{
+		AllowedOrigins:   []string{"https://*", "http://*"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		ExposedHeaders:   []string{"Link"},
+		AllowCredentials: false,
+		MaxAge:           300,
+	}))
 	serv.router.Use(middleware.RequestID)
 	serv.router.Use(middleware.RealIP)
 	serv.router.Use(middleware.Logger)
@@ -41,6 +50,8 @@ func NewServer(port uint, handlers handlers.HandlersFactory) *Server {
 			r.Patch("/rows", handlers.UpdateTable())
 			r.Get("/rows", handlers.GetTableData())
 			r.Post("/rows", handlers.AddRow())
+			r.Get("/rows/{id}", handlers.GetRow())
+			r.Delete("/rows/{id}", handlers.DeleteRow())
 			r.Patch("/rows/remove_duplicates", handlers.RemoveDuplicates())
 		})
 	})

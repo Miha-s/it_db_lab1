@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/Miha-s/it_db_lab1/internal/database"
 )
@@ -38,6 +39,7 @@ func (dbc *DatabaseController) CreateDatabase(name string) error {
 	var err error
 	dbc.databases[name], err = database.NewDatabase(dbc.storage_path, name)
 	if err != nil {
+		log.Print(err)
 		return err
 	}
 

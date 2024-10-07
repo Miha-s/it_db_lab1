@@ -122,7 +122,77 @@ func (f *HandlersFactory) AddRow() http.HandlerFunc {
 
 		err = table.AddRow(data.NewRow)
 		if err != nil {
+			log.Print(err)
 			http.Error(w, "Failed to add new row", http.StatusBadRequest)
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+	})
+}
+
+func (f *HandlersFactory) GetRow() http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		db_name := chi.URLParam(r, "db_name")
+		table_name := chi.URLParam(r, "table_name")
+		id := chi.URLParam(r, "id")
+
+		db, err := f.dbc.GetDatabase(db_name)
+		if err != nil {
+			http.Error(w, "Databaes does not exists", http.StatusNotFound)
+			return
+		}
+
+		table, err := db.GetTable(table_name)
+		if err != nil {
+			http.Error(w, "Failed to find table", http.StatusNotFound)
+			return
+		}
+
+		row, err := table.GetRow(id)
+		if err != nil {
+			http.Error(w, "Failed to find row", http.StatusNotFound)
+			return
+		}
+
+		data := map[string]interface{}{
+			"row": row,
+		}
+
+		jsonData, err := json.Marshal(data)
+		if err != nil {
+			http.Error(w, "Failed to marshal response", http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write(jsonData)
+
+	})
+}
+
+func (f *HandlersFactory) DeleteRow() http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		db_name := chi.URLParam(r, "db_name")
+		table_name := chi.URLParam(r, "table_name")
+		id := chi.URLParam(r, "id")
+
+		db, err := f.dbc.GetDatabase(db_name)
+		if err != nil {
+			http.Error(w, "Databaes does not exists", http.StatusNotFound)
+			return
+		}
+
+		table, err := db.GetTable(table_name)
+		if err != nil {
+			http.Error(w, "Failed to find table", http.StatusNotFound)
+			return
+		}
+
+		err = table.DeleteRow(id)
+		if err != nil {
+			http.Error(w, "Failed to find row", http.StatusNotFound)
 			return
 		}
 

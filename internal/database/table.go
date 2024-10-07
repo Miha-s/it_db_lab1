@@ -27,7 +27,7 @@ type Table struct {
 
 func NewTable(storage_path string, name string, attrs []attributes.Attribute) *Table {
 	id_attr, _ := attributes.CreateAttribute("integer", "id")
-	attrs = append(attrs, id_attr)
+	attrs = append([]attributes.Attribute{id_attr}, attrs...)
 	table := &Table{
 		storage_path: storage_path,
 		name:         name,
@@ -69,7 +69,11 @@ func LoadFromFile(storage_path string, name string) *Table {
 		}
 	}
 
-	t := NewTable(storage_path, name, attrs)
+	t := &Table{
+		storage_path: storage_path,
+		name:         name,
+		attributes:   attrs,
+	}
 	t.rows = records[2:]
 
 	return t
@@ -87,8 +91,29 @@ func (t *Table) GetAllData() [][]string {
 	return t.rows
 }
 
+func (t *Table) GetRow(id string) ([]string, error) {
+	for _, row := range t.rows {
+		if row[0] == id {
+			return row, nil
+		}
+	}
+
+	return nil, fmt.Errorf("failed to find row with id %v", id)
+}
+
+func (t *Table) DeleteRow(id string) error {
+	for index, row := range t.rows {
+		if id == row[0] {
+			t.rows = append(t.rows[:index], t.rows[index+1:]...)
+			t.Sync()
+			return nil
+		}
+	}
+	return fmt.Errorf("failed to fin drow with id %v", id)
+}
+
 func (t *Table) AddRow(row []string) error {
-	row = append(row, strconv.Itoa(int(t.last_id)))
+	row = append([]string{strconv.Itoa(int(t.last_id))}, row...)
 	if len(row) != len(t.attributes) {
 		return errors.New("invalid number of arguments")
 	}
@@ -99,6 +124,7 @@ func (t *Table) AddRow(row []string) error {
 
 	t.rows = append(t.rows, row)
 	t.last_id++
+	t.Sync()
 
 	return nil
 }
@@ -149,6 +175,8 @@ func (t *Table) UpdateRow(row []string, row_to_update AcceptRow) error {
 		}
 	}
 
+	t.Sync()
+
 	return nil
 }
 
@@ -176,7 +204,7 @@ func (t *Table) RemoveDuplicates() {
 	var uniqueRows [][]string
 
 	for _, row := range t.rows {
-		rowStr := fmt.Sprintf("%v", row)
+		rowStr := fmt.Sprintf("%v", row[1:])
 
 		if !rowMap[rowStr] {
 			uniqueRows = append(uniqueRows, row)
@@ -185,6 +213,7 @@ func (t *Table) RemoveDuplicates() {
 	}
 
 	t.rows = uniqueRows
+	t.Sync()
 }
 
 func (t *Table) validateRow(row []string) error {

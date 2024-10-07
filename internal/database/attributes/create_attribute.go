@@ -8,6 +8,8 @@ func CreateAttribute(attr_type string, attr_name string) (Attribute, error) {
 		return NewCharAttribute(attr_name), nil
 	case "integer":
 		return NewIntegerAttribute(attr_name), nil
+	case "string":
+		return NewStringAttribute(attr_name), nil
 	case "real":
 		return NewRealAttribute(attr_name), nil
 	case "color":
